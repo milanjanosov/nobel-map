@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Where Nobel laureates were born</title>
+<meta name="description" content="An interactive map of Nobel laureates by birth country, 1901 to today. Filter by year and prize category.">
+<meta name="theme-color" content="#0B0E14">
+<meta property="og:title" content="Where Nobel laureates were born">
+<meta property="og:description" content="Every Nobel laureate since 1901, mapped by birth country.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<link rel="stylesheet" href="src/style.css?v=3">
+</head>
+<body>
+<header class="topbar">
+  <div class="titles">
+    <h1>Where Nobel laureates were born</h1>
+    <p class="subtitle">Every laureate since 1901, mapped by birth country. Filter by year and prize.</p>
+  </div>
+  <div class="top-actions">
+    <button type="button" class="link-btn" id="about-btn">About the data</button>
+    <button type="button" class="gold-btn" id="news-btn">📬 Free newsletter</button>
+  </div>
+</header>
+
+<main class="stage">
+  <div id="map" aria-label="Choropleth map of Nobel laureates by birth country"></div>
+  <div id="load-msg" class="load-msg" role="status">Loading map…</div>
+
+  <section class="panel" id="panel" aria-label="Filters and summary">
+    <button type="button" class="sheet-toggle" id="sheet-toggle" aria-expanded="true" aria-controls="panel-body">
+      <span class="grip"></span><span class="sr-only">Toggle panel</span>
+    </button>
+    <div class="panel-body" id="panel-body">
+      <div class="headline" aria-live="polite">
+        <div class="big" id="big-number">–</div>
+        <div class="big-label" id="big-label">laureates</div>
+      </div>
+
+      <div class="block">
+        <div class="block-head">
+          <span class="label">Years</span>
+          <span class="years"><output id="from-out">1901</output> – <output id="to-out">2025</output></span>
+        </div>
+        <div class="range" id="range">
+          <div class="track"></div>
+          <div class="fill" id="range-fill"></div>
+          <input type="range" id="from" aria-label="Start year" min="1901" max="2025" value="1901">
+          <input type="range" id="to" aria-label="End year" min="1901" max="2025" value="2025">
+        </div>
+        <button type="button" class="play" id="play" aria-pressed="false"><span id="play-icon">▶</span> <span id="play-text">Play</span></button>
+      </div>
+
+      <div class="block">
+        <div class="block-head"><span class="label">Metric</span></div>
+        <div class="seg" id="metric" role="group" aria-label="Metric"></div>
+        <p class="metric-note" id="metric-note" hidden>Uses today's population/GDP for all years. Countries under 1M people not rated.</p>
+      </div>
+
+      <div class="block">
+        <div class="block-head"><span class="label">Prize categories</span></div>
+        <div class="chips" id="chips" role="group" aria-label="Prize categories"></div>
+      </div>
+
+      <div class="block">
+        <div class="block-head"><span class="label">Top 10 countries</span></div>
+        <ol class="top10" id="top10"></ol>
+      </div>
+
+      <div class="block legend-block">
+        <div class="block-head"><span class="label" id="legend-title">Laureates per country</span></div>
+        <ul class="legend" id="legend"></ul>
+      </div>
+    </div>
+  </section>
+
+  <div class="card-sheet" id="card-sheet" hidden aria-label="Laureates of the selected country"></div>
+</main>
+
+<dialog id="news-modal" class="modal" aria-labelledby="news-title">
+  <button type="button" class="icon-btn modal-close" data-close aria-label="Close">✕</button>
+  <div class="modal-icon">📬</div>
+  <h2 id="news-title">Free newsletter</h2>
+  <p>Enjoying the map? I write a free data science newsletter: maps, data, and practical Python, no fluff. Join the readers.</p>
+  <div class="embed"><iframe id="news-frame" title="Subscribe to the newsletter" width="100%" height="150" frameborder="0" scrolling="no" loading="lazy"></iframe></div>
+  <p class="fallback"><a id="news-link" target="_blank" rel="noopener">Or subscribe on Substack</a></p>
+</dialog>
+
+<dialog id="about-modal" class="modal wide" aria-labelledby="about-title">
+  <button type="button" class="icon-btn modal-close" data-close aria-label="Close">✕</button>
+  <h2 id="about-title">About the data</h2>
+  <ul class="about">
+    <li><strong>Birth country.</strong> Each laureate is placed in the country where they were born, not where they worked or held citizenship.</li>
+    <li><strong>Modern borders.</strong> Birthplaces are mapped to today's countries. Someone born in the Russian Empire in a town that is now in Poland counts for Poland.</li>
+    <li><strong>People, not prizes.</strong> We count distinct laureates. Marie Curie won twice and counts once. This follows the same approach as Wikipedia's list of Nobel laureates by country, though individual totals can differ slightly.</li>
+    <li><strong>Up to date as of the data date below.</strong> Prizes announced after that date, including the rest of the current year's prizes, appear once the data is regenerated.</li>
+    <li><strong>Organizations excluded.</strong> Prizes to organizations, such as the Red Cross, have no birth country and are left out, along with laureates whose birthplace is unknown.</li>
+    <li><strong>Categories.</strong> Physics, Chemistry, Medicine, Literature, Peace and Economics. The Economics prize dates from 1969 and is not an original Nobel prize.</li>
+    <li><strong>Normalised views.</strong> The per-population and per-GDP rates use today's population and GDP for all years, whatever year range is selected. Countries under 1M people are not rated.</li>
+    <li><strong>Sources.</strong> <a href="https://www.nobelprize.org/about/developer-zone-2/" target="_blank" rel="noopener">Nobel Prize API</a> (CC0), <a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener">Natural Earth</a> (public domain), population and GDP from the <a href="https://data.worldbank.org/" target="_blank" rel="noopener">World Bank</a>, base map © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a> © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>.</li>
+  </ul>
+  <p class="meta" id="about-meta"></p>
+</dialog>
+
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="src/app.js?v=3"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+# GitHub gets the web app only. Everything else stays local.
+/*
+!/.gitignore
+!/.nojekyll
+!/index.html
+!/README.md
+!/src/
+!/data/
+!/docs/
+/data/*
+!/data/countries.geojson
+!/data/laureates.json
