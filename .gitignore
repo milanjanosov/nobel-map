@@ -9,4 +9,5 @@
 !/docs/
 /data/*
 !/data/countries.geojson
+!/data/country_stats.json
 !/data/laureates.json
